@@ -1,107 +1,108 @@
 # hellow-world
 jianduan
-#include<algorithm>
-#include<iostream>
-#include<queue>
-#include<vector>
-#include <cstdio>
-usingnamespace std;
-const int MAX = 20;
-int          P[MAX][MAX];
-int          Q[MAX][MAX];
-int          maxout[MAX];
-int          n;
-structnode {
-       int   id;
-       int   sum;
-       int   r;
-       int   up;
-       int   *x;
-};
-structcmp {
-       bool operator()( node* a, node* b )
-       {
-              return(a->up < b->up);
-       }
-};
-voidsolve()
-{
-       int                                      ans= 0;
-       priority_queue<node*,vector<node*>, cmp>  que;
-       node                                         *E = new node();
-       E->id      =1;
-       E->sum  =0;
-       E->r       =0;
-       E->up    =0;
-       for ( int i = 1; i <= n; i++ )
-       {
-              E->r += maxout[i];
-       }
-       E->up    =E->r;
-       E->x       =new int[n + 1];
-       for ( int i = 1; i <= n; i++ )
-       {
-              E->x[i] = i;
-       }
-       while ( E->id != n + 1 )
-       {
-              for ( int i = E->id; i <= n;i++ )
-              {
-                     node* nE = new node();
-                     nE->id    = E->id + 1;
-                     nE->x     = new int[n + 1];
-                     for ( int t = 1; t <= n;t++ )
-                     {
-                            nE->x[t] =E->x[t];
-                     }
-                     nE->x[E->id] = E->x[i];
-                     nE->x[i]  = E->x[E->id];
-                     nE->sum              = E->sum +P[E->id][nE->x[E->id]] * Q[nE->x[E->id]][E->id];
-                     nE->r            = E->r - maxout[E->id];
-                     nE->up         = nE->sum + nE->r;
-                     que.push( nE );
-              }
-              if ( !que.empty() )
-              {
-                     E= que.top();
-                     que.pop();
-              }else  {
-                     ans = 0;
-                     break;
-              }
-       }
-       ans = E->sum;
-       cout << ans << endl;
+#include<bits/stdc++.h>
+#define N 1200005
+#define inf 1000000007
+using namespace std;
+int mask;char s[3000005];
+int Q;
+string chars;
+void gets(int mask){
+    scanf("%s",s);chars=s;
+    for(int j=0;j<chars.length();j++){
+        mask=(mask*131+j)%chars.length();
+        char t=chars[j];
+        chars[j]=chars[mask];
+        chars[mask]=t;
+    }
 }
- 
- 
-intmain()
-{
-       cin >> n;
-       for ( int i = 1; i <= n; i++ )
-       {
-              for ( int j = 1; j <= n; j++ )
-              {
-                     cin >> P[i][j];
-              }
-       }
-       for ( int i = 1; i <= n; i++ )
-       {
-              for ( int j = 1; j <= n; j++ )
-              {
-                     cin >> Q[i][j];
-              }
-       }
-       for ( int i = 1; i <= n; i++ )
-       {
-              int ma = 0;
-              for ( int j = 1; j <= n; j++ )
-              {
-                     ma = max( ma, Q[i][j] *P[j][i] );
-              }
-              maxout[i] = ma;
-       }
-       solve();
-       return(0);
+struct Link_Cut_Tree{
+    int top,fa[N],c[N][2],val[N],tag[N],q[N];
+    inline void add(int x,int y){if(x)tag[x]+=y,val[x]+=y;}
+    inline void pushdown(int x){
+        int l=c[x][0],r=c[x][1];
+        if(tag[x]){
+            add(l,tag[x]);add(r,tag[x]);
+            tag[x]=0;
+        }
+    }
+    inline bool isroot(int x){return c[fa[x]][0]!=x&&c[fa[x]][1]!=x;}
+    inline void rotate(int x){
+        int y=fa[x],z=fa[y],l,r;
+        if(c[y][0]==x)l=0;else l=1;r=l^1;
+        if(!isroot(y)){if(c[z][0]==y)c[z][0]=x;else c[z][1]=x;}
+        fa[x]=z;fa[y]=x;fa[c[x][r]]=y;
+        c[y][l]=c[x][r];c[x][r]=y;
+    }
+    inline void splay(int x){
+        int top=1;q[top]=x;
+        for(int i=x;!isroot(i);i=fa[i])q[++top]=fa[i];
+        for(int i=top;i;i--)pushdown(q[i]);
+        while(!isroot(x)){
+            int y=fa[x],z=fa[y];
+            if(!isroot(y)){
+                if((c[z][0]==y)^(c[y][0]==x))rotate(x);
+                else rotate(y);
+            }rotate(x);
+        }
+    }
+    void access(int x){for(int t=0;x;t=x,x=fa[x])splay(x),c[x][1]=t;}
+    inline void link(int x,int y){fa[x]=y;access(y);splay(y);add(y,val[x]);}
+    inline void cut(int x){
+        access(x);splay(x);add(c[x][0],-val[x]);
+        fa[c[x][0]]=0;c[x][0]=0;
+    }    
+}T;
+struct Suffix_AutoMaton{
+    int l[N],fa[N],ch[N][26];
+    int cnt,last;
+    Suffix_AutoMaton(){cnt=1;last=1;}
+    void ins(int c){
+        int p=last,np=++cnt;last=np;T.val[np]=1;l[np]=l[p]+1;
+        for(;p&&!ch[p][c];p=fa[p])ch[p][c]=np;
+        if(!p)fa[np]=1,T.link(np,1);
+        else{
+            int q=ch[p][c];
+            if(l[p]+1==l[q])fa[np]=q,T.link(np,q);
+            else{
+                int nq=++cnt;l[nq]=l[p]+1;
+                memcpy(ch[nq],ch[q],sizeof(ch[q]));
+                fa[nq]=fa[q];T.link(nq,fa[q]);
+                fa[np]=fa[q]=nq;
+                T.cut(q);T.link(q,nq);T.link(np,nq);
+                for(;ch[p][c]==q;p=fa[p])ch[p][c]=nq;
+            }
+        }
+    }
+    void build(){
+        scanf("%s",s);int len=strlen(s);
+        for(int i=0;i<len;i++)ins(s[i]-'A');
+    }
+    int query(){
+        gets(mask);
+        int p=1;int len=chars.length();
+        for(int i=0;i<len;i++)if(!(p=ch[p][chars[i]-'A']))return 0;
+        T.splay(p);
+        return T.val[p];
+    }
+    void add(){
+        gets(mask);int len=chars.length();
+        for(int i=0;i<len;i++)ins(chars[i]-'A');
+    }
+}sam;
+int main(){
+    scanf("%d",&Q);sam.build();
+    while(Q--){
+        scanf("%s",s);
+        if(*s=='A')sam.add();
+        else{
+            int ans=sam.query();
+            printf("%d\n",ans);
+            mask^=ans;
+        }
+    }
+    return 0;
+
+
 }
 	
