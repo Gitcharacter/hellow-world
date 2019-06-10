@@ -104,5 +104,4 @@ intmain()
        solve();
        return(0);
 }
-
-！	
+	
