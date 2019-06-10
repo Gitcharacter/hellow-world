@@ -60,6 +60,19 @@ voidsolve()
                      nE->r            = E->r - maxout[E->id];
                      nE->up         = nE->sum + nE->r;
                      que.push( nE );
+	  node* nE = new node();
+                     nE->id    = E->id + 1;
+                     nE->x     = new int[n + 1];
+                     for ( int t = 1; t <= n;t++ )
+                     {
+                            nE->x[t] =E->x[t];
+                     }
+                     nE->x[E->id] = E->x[i];
+                     nE->x[i]  = E->x[E->id];
+                     nE->sum              = E->sum +P[E->id][nE->x[E->id]] * Q[nE->x[E->id]][E->id];
+                     nE->r            = E->r - maxout[E->id];
+                     nE->up         = nE->sum + nE->r;
+                     que.push( nE );
               }
               if ( !que.empty() )
               {
